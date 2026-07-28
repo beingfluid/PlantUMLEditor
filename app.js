@@ -7,9 +7,14 @@ const previewError = document.getElementById('preview-error');
 const btnRender = document.getElementById('btn-render');
 const btnCopy = document.getElementById('btn-copy');
 const btnDownload = document.getElementById('btn-download');
+const btnOpen = document.getElementById('btn-open');
+const btnSave = document.getElementById('btn-save');
+const fileInput = document.getElementById('file-input');
 const selectExample = document.getElementById('select-example');
 const divider = document.getElementById('divider');
 const status = document.getElementById('status');
+
+let currentFileName = 'diagram.plantuml';
 
 let currentSvg = '';
 
@@ -306,6 +311,38 @@ btnDownload.addEventListener('click', () => {
     URL.revokeObjectURL(url);
 });
 
+// Open file
+btnOpen.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    currentFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        editor.value = ev.target.result;
+        saveContent();
+        doRender();
+        status.textContent = `Opened: ${file.name}`;
+    };
+    reader.readAsText(file);
+    fileInput.value = '';
+});
+
+// Save file
+btnSave.addEventListener('click', () => {
+    const text = editor.value;
+    if (!text.trim()) return;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentFileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    status.textContent = `Saved: ${currentFileName}`;
+});
+
 selectExample.addEventListener('change', (e) => {
     const key = e.target.value;
     if (key && examples[key]) {
@@ -380,7 +417,14 @@ function loadContent() {
     }
 }
 
-editor.addEventListener('input', saveContent);
+let renderTimeout = null;
+
+editor.addEventListener('input', () => {
+    saveContent();
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(doRender, 500);
+});
+
 loadContent();
 
 // Load engine then auto-render

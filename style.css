@@ -137,6 +137,12 @@ main {
     height: auto;
 }
 
+.toolbar-sep {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+}
+
 #preview-placeholder {
     color: var(--text-muted);
     font-size: 0.95rem;

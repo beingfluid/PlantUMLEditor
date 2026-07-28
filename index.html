@@ -11,9 +11,13 @@
     <header>
         <h1>PlantUML Editor</h1>
         <div class="toolbar">
+            <button id="btn-open" title="Open .plantuml file">Open</button>
+            <button id="btn-save" title="Save as .plantuml file">Save</button>
+            <span class="toolbar-sep"></span>
             <button id="btn-render" title="Render (Ctrl+Enter)">Render</button>
             <button id="btn-copy" title="Copy SVG markup">Copy SVG</button>
             <button id="btn-download" title="Download SVG">Download SVG</button>
+            <span class="toolbar-sep"></span>
             <select id="select-example">
                 <option value="">-- Examples --</option>
                 <option value="sequence">Sequence Diagram</option>
@@ -24,6 +28,7 @@
                 <option value="usecase">Use Case Diagram</option>
             </select>
             <span id="status" class="status">Ready (local rendering)</span>
+            <input type="file" id="file-input" accept=".plantuml,.puml,.pu,.txt,.wsd" hidden />
         </div>
     </header>
     <main>
