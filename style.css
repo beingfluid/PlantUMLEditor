@@ -123,7 +123,7 @@ button:active {
 
 #btn-viewer.active,
 #btn-visual-editor.active,
-#btn-wide.active {
+#btn-toggle-code.active {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);

@@ -19,7 +19,6 @@ const btnClear = document.getElementById('btn-clear');
 const btnExportModal = document.getElementById('btn-export-modal');
 const btnViewer = document.getElementById('btn-viewer');
 const btnVisualEditor = document.getElementById('btn-visual-editor');
-const btnWide = document.getElementById('btn-wide');
 const fileInput = document.getElementById('file-input');
 const selectExample = document.getElementById('select-example');
 const divider = document.getElementById('divider');
@@ -897,8 +896,8 @@ function doRender() {
         const svg = previewOutput.querySelector('svg');
         if (svg) {
             clearInterval(checkRendered);
-            currentSvg = previewOutput.innerHTML;
             applyDiagramTheme();
+            currentSvg = previewOutput.innerHTML;
             makeDiagramInteractive(svg);
             previewOutput.style.display = 'block';
             previewPlaceholder.style.display = 'none';
@@ -1006,7 +1005,17 @@ btnDownload.addEventListener('click', () => {
         showToast('No SVG to download. Render first.', 'error');
         return;
     }
-    const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
+    // Build a standalone SVG with XML declaration and embedded styles
+    let svgContent = currentSvg;
+    // Add XML declaration if not present
+    if (!svgContent.startsWith('<?xml')) {
+        svgContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgContent;
+    }
+    // Ensure xmlns is present
+    if (!svgContent.includes('xmlns="http://www.w3.org/2000/svg"')) {
+        svgContent = svgContent.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1275,6 +1284,19 @@ veClose.addEventListener('click', () => {
     isVisualEditorOpen = false;
     visualEditorPanel.classList.add('hidden');
     btnVisualEditor.classList.remove('active');
+    resetPaneSizes();
+});
+
+// ======= TOOLBAR: Code Editor Toggle =======
+const btnToggleCode = document.getElementById('btn-toggle-code');
+let isCodeEditorVisible = true;
+btnToggleCode.classList.add('active');
+
+btnToggleCode.addEventListener('click', () => {
+    isCodeEditorVisible = !isCodeEditorVisible;
+    editorPane.classList.toggle('hidden', !isCodeEditorVisible);
+    divider.classList.toggle('hidden', !isCodeEditorVisible);
+    btnToggleCode.classList.toggle('active', isCodeEditorVisible);
     resetPaneSizes();
 });
 
