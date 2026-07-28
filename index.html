@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantUML Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="lib/viz-global.js"></script>
+</head>
+<body>
+    <header>
+        <h1>PlantUML Editor</h1>
+        <div class="toolbar">
+            <button id="btn-render" title="Render (Ctrl+Enter)">Render</button>
+            <button id="btn-copy" title="Copy SVG markup">Copy SVG</button>
+            <button id="btn-download" title="Download SVG">Download SVG</button>
+            <select id="select-example">
+                <option value="">-- Examples --</option>
+                <option value="sequence">Sequence Diagram</option>
+                <option value="class">Class Diagram</option>
+                <option value="activity">Activity Diagram</option>
+                <option value="component">Component Diagram</option>
+                <option value="state">State Diagram</option>
+                <option value="usecase">Use Case Diagram</option>
+            </select>
+            <span id="status" class="status">Ready (local rendering)</span>
+        </div>
+    </header>
+    <main>
+        <div class="editor-pane">
+            <textarea id="editor" spellcheck="false">@startuml
+Alice -> Bob: Authentication Request
+Bob --> Alice: Authentication Response
+
+Alice -> Bob: Another authentication Request
+Alice <-- Bob: Another authentication Response
+@enduml</textarea>
+        </div>
+        <div class="divider" id="divider"></div>
+        <div class="preview-pane">
+            <div id="preview-container">
+                <div id="preview-output"></div>
+                <div id="preview-placeholder">Press Render or Ctrl+Enter to generate diagram</div>
+                <div id="preview-error" class="hidden"></div>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
