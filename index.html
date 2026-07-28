@@ -9,14 +9,25 @@
 </head>
 <body>
     <header>
-        <h1>PlantUML Editor</h1>
+        <div class="header-left">
+            <h1>PlantUML Editor</h1>
+            <input type="text" id="title-field" placeholder="Diagram Title" title="Diagram title (synced with title line)" />
+            <span id="dirty-indicator" class="dirty-indicator hidden">unsaved</span>
+        </div>
         <div class="toolbar">
             <button id="btn-open" title="Open .plantuml file">Open</button>
-            <button id="btn-save" title="Save as .plantuml file">Save</button>
+            <button id="btn-save" title="Save as .plantuml file (Ctrl+S)">Save</button>
+            <button id="btn-import-clipboard" title="Import from clipboard">Paste</button>
+            <button id="btn-copy-source" title="Copy PlantUML source">Copy Source</button>
+            <button id="btn-clear" title="Clear editor">Clear</button>
             <span class="toolbar-sep"></span>
             <button id="btn-render" title="Render (Ctrl+Enter)">Render</button>
             <button id="btn-copy" title="Copy SVG markup">Copy SVG</button>
             <button id="btn-download" title="Download SVG">Download SVG</button>
+            <button id="btn-export-modal" title="Export source in modal">Export</button>
+            <span class="toolbar-sep"></span>
+            <button id="btn-viewer" title="Full-screen viewer mode">Viewer</button>
+            <button id="btn-visual-editor" title="Toggle Visual Editor panel">Visual Editor</button>
             <span class="toolbar-sep"></span>
             <select id="select-example">
                 <option value="">-- Examples --</option>
@@ -31,8 +42,9 @@
             <input type="file" id="file-input" accept=".plantuml,.puml,.pu,.txt,.wsd" hidden />
         </div>
     </header>
+
     <main>
-        <div class="editor-pane">
+        <div class="editor-pane" id="editor-pane">
             <textarea id="editor" spellcheck="false">@startuml
 Alice -> Bob: Authentication Request
 Bob --> Alice: Authentication Response
@@ -42,14 +54,192 @@ Alice <-- Bob: Another authentication Response
 @enduml</textarea>
         </div>
         <div class="divider" id="divider"></div>
-        <div class="preview-pane">
+        <div class="preview-pane" id="preview-pane">
             <div id="preview-container">
                 <div id="preview-output"></div>
                 <div id="preview-placeholder">Press Render or Ctrl+Enter to generate diagram</div>
                 <div id="preview-error" class="hidden"></div>
             </div>
         </div>
+
+        <!-- Visual Editor Panel -->
+        <div class="visual-editor-panel hidden" id="visual-editor-panel">
+            <div class="ve-header">
+                <div class="ve-header-title">
+                    <h3>Edit</h3>
+                    <span class="ve-subtitle" id="ve-subtitle">Visual sequence builder</span>
+                </div>
+                <div class="ve-header-actions">
+                    <button id="ve-generate" class="ve-action-btn" title="Sync to code editor">Sync</button>
+                    <button id="ve-close" class="ve-action-btn" title="Close Visual Editor">&times;</button>
+                </div>
+            </div>
+
+            <div class="ve-tabs">
+                <button class="ve-tab active" data-tab="build">Build</button>
+                <button class="ve-tab" data-tab="sequence">Sequence</button>
+                <button class="ve-tab" data-tab="participants">Participants</button>
+            </div>
+
+            <div class="ve-content">
+                <!-- BUILD TAB -->
+                <div class="ve-tab-content active" id="ve-tab-build">
+                    <div class="ve-card">
+                        <h4>Diagram title</h4>
+                        <label class="ve-label">Title
+                            <input type="text" id="ve-title-input" placeholder="Diagram title" />
+                        </label>
+                    </div>
+
+                    <div class="ve-card">
+                        <h4>Add connection</h4>
+                        <div class="ve-grid-2">
+                            <label class="ve-label">From
+                                <select id="ve-conn-from"><option value="">Select...</option></select>
+                            </label>
+                            <label class="ve-label">To
+                                <select id="ve-conn-to"><option value="">Select...</option></select>
+                            </label>
+                        </div>
+                        <div class="ve-grid-2">
+                            <label class="ve-label">Type
+                                <select id="ve-conn-arrow">
+                                    <option value="->">Request (solid)</option>
+                                    <option value="-->">Response (dashed)</option>
+                                    <option value="&lt;-">Reverse solid</option>
+                                    <option value="&lt;--">Reverse dashed</option>
+                                </select>
+                            </label>
+                            <label class="ve-label">Label
+                                <input type="text" id="ve-conn-label" placeholder="Connection label" />
+                            </label>
+                        </div>
+                        <button id="ve-add-connection" class="ve-btn-primary">Insert connection</button>
+                    </div>
+
+                    <div class="ve-card">
+                        <h4>Add section divider</h4>
+                        <label class="ve-label">Title
+                            <input type="text" id="ve-divider-title" placeholder="Section title" />
+                        </label>
+                        <button id="ve-add-divider" class="ve-btn-secondary">Insert section</button>
+                    </div>
+
+                    <div class="ve-card">
+                        <h4>Add participant</h4>
+                        <div class="ve-grid-2">
+                            <label class="ve-label">Name
+                                <input type="text" id="ve-participant-name" placeholder="Display name" />
+                            </label>
+                            <label class="ve-label">Alias
+                                <input type="text" id="ve-participant-alias" placeholder="Short alias" />
+                            </label>
+                        </div>
+                        <div class="ve-grid-3">
+                            <label class="ve-label">Type
+                                <select id="ve-participant-type">
+                                    <option value="participant">Participant</option>
+                                    <option value="actor">Actor</option>
+                                    <option value="database">Database</option>
+                                    <option value="queue">Queue</option>
+                                    <option value="boundary">Boundary</option>
+                                    <option value="control">Control</option>
+                                    <option value="entity">Entity</option>
+                                </select>
+                            </label>
+                            <label class="ve-label">Color
+                                <input type="color" id="ve-participant-color" value="#e20074" />
+                            </label>
+                            <label class="ve-label">&nbsp;
+                                <button id="ve-add-participant" class="ve-btn-secondary ve-full-btn">Add</button>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEQUENCE TAB -->
+                <div class="ve-tab-content" id="ve-tab-sequence">
+                    <!-- Edit selection panel (shown when something is selected) -->
+                    <div id="ve-edit-panel" class="ve-card hidden">
+                        <div class="ve-edit-header">
+                            <h4 id="ve-edit-title">Edit</h4>
+                            <button id="ve-edit-close" class="ve-edit-close">&times;</button>
+                        </div>
+                        <div id="ve-edit-body"></div>
+                    </div>
+
+                    <div class="ve-card ve-card-flat">
+                        <div class="ve-sequence-header">
+                            <h4>Flow order</h4>
+                            <span class="ve-count" id="ve-event-count">0 events</span>
+                        </div>
+                        <p class="ve-hint">Drag to reorder. Click to edit. Click elements in the diagram to select them.</p>
+                        <ul id="ve-event-list" class="ve-event-list"></ul>
+                    </div>
+                </div>
+
+                <!-- PARTICIPANTS TAB -->
+                <div class="ve-tab-content" id="ve-tab-participants">
+                    <div class="ve-card ve-card-flat">
+                        <div class="ve-sequence-header">
+                            <h4>Participants</h4>
+                            <span class="ve-count" id="ve-participant-count">0</span>
+                        </div>
+                        <ul id="ve-participant-list" class="ve-participant-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <!-- Viewer Mode Overlay -->
+    <div id="viewer-mode" class="viewer-mode hidden">
+        <div class="viewer-controls">
+            <span id="viewer-zoom-level">100%</span>
+            <button id="viewer-zoom-in" title="Zoom In">+</button>
+            <button id="viewer-zoom-out" title="Zoom Out">-</button>
+            <button id="viewer-zoom-reset" title="Reset Zoom">Reset</button>
+            <button id="viewer-exit" title="Exit viewer (Esc)">Exit</button>
+        </div>
+        <div class="viewer-canvas" id="viewer-canvas">
+            <div class="viewer-content" id="viewer-content"></div>
+        </div>
+    </div>
+
+    <!-- Zoom Overlay for Preview -->
+    <div id="zoom-overlay" class="zoom-overlay hidden">
+        <span id="zoom-level-display">100%</span>
+    </div>
+
+    <!-- Import from Clipboard Modal -->
+    <div id="modal-import" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <h3>Import from Clipboard</h3>
+            <textarea id="import-textarea" placeholder="Paste your PlantUML code here..." rows="12"></textarea>
+            <div class="modal-actions">
+                <button id="import-cancel" class="modal-btn">Cancel</button>
+                <button id="import-confirm" class="modal-btn modal-btn-primary">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="modal-export" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <h3>Export PlantUML Source</h3>
+            <textarea id="export-textarea" readonly rows="12"></textarea>
+            <div class="modal-actions">
+                <button id="export-copy" class="modal-btn modal-btn-primary">Copy to Clipboard</button>
+                <button id="export-close" class="modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>
